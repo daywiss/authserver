@@ -1,6 +1,6 @@
 #copy this file to .env in the root directory
-WHITELIST=dadams.info,society.gg,skinx.gg,localhost,steamcommunity.com
-HOSTNAME=skinx.gg
+WHITELIST=yourdomain.com
+HOSTNAME=http://www.yourdomain.com
 NODE_ENV=production
 PORT=3000
 STEAM_API_KEY=xxxx
