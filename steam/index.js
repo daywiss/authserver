@@ -70,7 +70,7 @@ module.exports = function(app,store,env){
 
   app.get(base,validateToken,function(req,res){
     store.get(req.token).then(function(result){
-      if(result == null) res.send(null)
+      if(result == null) return res.send(null)
       return res.json(result.steam)
     })
   })
@@ -88,7 +88,7 @@ module.exports = function(app,store,env){
         openid:auth,
         token:req.token,
         expires:Date.now() + 3600000 ,
-        returnURL:req.query.returnURL
+        returnto:req.query.returnto
       }
       res.redirect(authURL)
     })
@@ -97,22 +97,24 @@ module.exports = function(app,store,env){
 
   app.get(base+'/verify/:id',function(req,res,next){
     var auth = auths[req.params.id]
-    if(auth == null) return next('Failed to authenticate steam user')
-    if(auth.openid == null) return next('Failed to authenticate steam user')
+    // console.log('calling verify',auth)
+    if(auth == null || auth.openid == null){
+     return next('Failed to authenticate steam user')
+    }
+    var returnto = auth.returnto
     auth.openid.verifyAssertion(req,function(err,result){
       if(err) return next(err.message)
       if(!result || !result.authenticated) return next('Failed to authenticate steam user')
       getUserInfo(result.claimedIdentifier,env.STEAM_API_KEY).then(function(steamData){
         return updateUserSteam(store,auth.token,steamData)
       }).then(function(result){
-        var redirect = auth.returnURL
+        // console.log(result)
         delete auths[req.params.id]
-        if(redirect) return res.redirect(redirect)
+        if(returnto) return res.redirect(returnto)
         res.json(result.steam)
       }).catch(function(err){
-        var redirect = auth.returnURL
         delete auths[req.params.id]
-        if(redirect) return res.redirect(redirect)
+        if(returnto) return res.redirect(returnto)
         next(err)
       })
     })

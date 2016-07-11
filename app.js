@@ -12,7 +12,8 @@ app.listen(process.env.PORT,function(){
 })
 
 var store = Store()
-store.set('whitelist',process.env.WHITELIST.split(','))
+var wl = process.env.WHITELIST || '' 
+store.set('whitelist',wl.split(','))
 
 app.use(Middleware.config(store,process.env))
 app.use(Middleware.whitelist(store,process.env))
@@ -24,7 +25,7 @@ app.use(Middleware.parsetoken(store,process.env))
 router(app,store,process.env)
 steam(app,store,process.env)
 
-app.use(function(req,res,next){
+app.all('/',function(req,res){
   res.sendStatus(404)
 })
 
