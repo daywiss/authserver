@@ -1,6 +1,6 @@
 #copy this file to .env in the root directory
-WHITELIST=yourdomain.com
-HOSTNAME=http://www.yourdomain.com
-NODE_ENV=production
+#whitelist domains followed by commas
+WHITELIST=localhost
+HOSTNAME=http://localhost
 PORT=3000
 STEAM_API_KEY=xxxx
