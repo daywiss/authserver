@@ -11,8 +11,17 @@ cp dotenv.example .env
 npm start 
 ```
 #usage
-the auth server comes with a steam open id implementation. visit
-localhost:3000/steam/auth?access_token='test'
-login to steam then visit
-localhost:3000/steam?access_token='test'
+the auth server comes with a steam open id implementation. visit:
+
+[http://localhost:3000/steam/auth?access_token=testtoken](http://localhost:3000/steam/auth?access_token=testtoken)
+
+login to steam then visit:
+
+[http://localhost:3000?access_token=testtoken](http://localhost:3000?access_token=testtoken)
+
+[http://localhost:3000/steam?access_token=testtoken](http://localhost:3000/steam?access_token=testtoken)
+
 to retreive the steam user data
+
+Access token can also be set in the http header request as
+```request.set('authorization','bearer testtoken')```
