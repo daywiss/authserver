@@ -26,7 +26,7 @@ Use these calls to generate tokens for clients and login through third parties
   - Data Param   
     `{access_token:'token'}`   
   - URL Param   
-    `aceess_token=token`   
+    `access_token=token`   
 
 ## Generate Client Token   
 - URL   
@@ -130,19 +130,20 @@ Gets login data about token from Steam or other third party logins
 ## Update Token with custom data
 Use this to update token with custom user data. For example, the client logs into steam, which then authorizes your site, you can attach your sites user data to token.    
 - URL     
-  :key cannot be reserved words: `expires` or `token`   
-  /:key   
+  /:token   
 - Method   
   PUT   
 - Data Params   
-  JSON Object which will be keyed by :key   
+  JSON Object which will be merged with user data. This can overwrite existing keys, so be careful   
 
      ```js
      {
-       id:'customuserid',   
-       username: 'customusername',   
-       email: 'users email',
-       //etc.. 
+       customkey:{
+         id:'customuserid',   
+         username: 'customusername',   
+         email: 'users email',
+         //etc.. 
+       }
      }
      ```
 - Success   
@@ -150,10 +151,11 @@ Use this to update token with custom user data. For example, the client logs int
   - Content    
     Returns updated token data
 
-    ```javascript
+    ```js
     {
-      customkey:{//custom userdata},
-      steam:{//steam auth data},
+      customkey:{/*custom userdata*/},
+      //keys below here already existed on token
+      steam:{/*steam auth data*/},
       expires://expiration timestamp
     }
     ```
