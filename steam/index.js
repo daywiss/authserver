@@ -81,7 +81,7 @@ module.exports = function(app,env,cache){
     if(token == null) return res.status(404).send('token not found')
 
     openidState = {
-      token:token.token,
+      token:token.id,
       onsuccess:req.query.onsuccess,
       onfailure:req.query.onfailure || req.query.onsuccess
     }
