@@ -77,26 +77,6 @@ Remove token, effectively logging client out
   - Code 500  
     Not Authorized   
 
-## Login to Steam
-Redirect to steam open id login to allow client to login
-- URL   
-  /steam/auth   
-- Method   
-  GET   
-- URL Params   
-  Required:    
-  `successurl=//url to return client to after auth`   
-  `token=//client token`   
-  Optional:   
-  `failurl=//url to return client if auth fails` defaults to `successurl`   
-- Success   
-  - Code 300 Redirect   
-- Error   
-  - Code 404   
-    Token not found   
-  - Code 500  
-    Not Authorized    
-
 ## Verify Login and Get user data
 Gets login data about token from Steam or other third party logins   
 - URL   
@@ -163,4 +143,21 @@ Use this to update token with custom user data. For example, the client logs int
   - Code 500   
     Not Authorized   
   
-
+## Login to Steam
+Redirect to steam open id login to allow client to login
+- URL   
+  /steam/auth/:token   
+- Method   
+  GET   
+- URL Params   
+  Required:    
+  `onsuccess=//url to return client to after auth`   
+  Optional:   
+  `onfailure=//url to return client if auth fails` defaults to `onsuccess`   
+- Success   
+  - Code 300 Redirect   
+- Error   
+  - Code 404   
+    Token not found   
+  - Code 500  
+    Not Authorized    
