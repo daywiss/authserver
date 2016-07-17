@@ -61,7 +61,7 @@ Add time to token expiration date
   - Code 401   
     Not Authorized   
 
-## Delete/Logout   
+## Delete Token (Logout)   
 Remove token, effectively logging client out   
 - URL    
   /:token   
@@ -85,7 +85,7 @@ Gets login data about token from Steam or other third party logins
 - Success   
   - Code 200   
   - Content   
-    if user has logged into steam `{steam:{//steam data}, expires:long}`     
+    if user has logged into steam `{steam:{//see steam data}, expires:long}`     
     if not logged in `{expires:long}`   
 - Error   
   - Code 404   
