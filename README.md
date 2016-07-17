@@ -38,7 +38,7 @@ Use these calls to generate tokens for clients and login through third parties
   `{duration=ms until token expires}`
 - Success 
   - Code 200
-    Content `{token:string, expires:timestamp of expiration date}`
+    Content `{id:tokenid, expires:timestamp of expiration date}`
 - Error
   - Code 500
     Not Authorized
@@ -46,7 +46,7 @@ Use these calls to generate tokens for clients and login through third parties
 ## Renew Token
 Add time to token expiration date   
 - URL  
-  /:token
+  /:tokenid
 - Method  
   POST
 - Data Params   
@@ -54,7 +54,7 @@ Add time to token expiration date
   `{duration=ms until token expires}` will default to 24 hours if not supplied
 - Success  
   - Code 200   
-    Content `{token:string, expires:timestamp of expiration date}`  
+    Content `{id:tokenid, expires:timestamp of expiration date}`  
 - Error   
   - Code 404   
     Token not found  
@@ -64,7 +64,7 @@ Add time to token expiration date
 ## Delete Token (Logout)   
 Remove token, effectively logging client out   
 - URL    
-  /:token   
+  /:tokenid  
 - Method    
   DELETE
 - Success  
@@ -79,14 +79,14 @@ Remove token, effectively logging client out
 ## Verify Login and Get user data
 Gets login data about token from Steam or other third party logins   
 - URL   
-  /:token   
+  /:tokenid   
 - Method   
   GET  
 - Success   
   - Code 200   
   - Content   
-    if user has logged into steam `{steam:{//see steam data}, expires:long}`     
-    if not logged in `{expires:long}`   
+    if user has logged into steam `{steam:{/*see steam data*/}, id:string, expires:long}`     
+    if not logged in `{id:string, expires:long}`   
 - Error   
   - Code 404   
     Token not found   
@@ -109,7 +109,7 @@ Gets login data about token from Steam or other third party logins
 ## Update Token with custom data
 Use this to update token with custom user data. For example, the client logs into steam, which then authorizes your site, you can attach your sites user data to token.    
 - URL     
-  /:token   
+  /:tokenid
 - Method   
   PUT   
 - Data Params   
@@ -132,6 +132,7 @@ Use this to update token with custom user data. For example, the client logs int
 
     ```js
     {
+      id:string, //tokenid
       customkey:{/*custom userdata*/},
       //keys below here already existed on token
       steam:{/*steam auth data*/},
@@ -145,7 +146,7 @@ Use this to update token with custom user data. For example, the client logs int
 ## Login to Steam
 Redirect to steam open id login to allow client to login
 - URL   
-  /steam/auth/:token   
+  /steam/auth/:tokenid 
 - Method   
   GET   
 - URL Params   
