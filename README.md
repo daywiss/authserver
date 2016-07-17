@@ -1,5 +1,5 @@
 # authserver
-a central token based auth server to add openid or other login types. includes steam openid auth module. Can be used to provide federated logins for a single site or multiple sites who want to share user authentication data. 
+A central token based auth server to add openid or other login types. Use this as an API server for your backend to request tokens, set expirations and handle federated logins. It includes Steam as an example. Useful if you want to share logins across several sites.
 
 # Getting Started
 `git clone http://github.com/daywiss/authserver`
@@ -42,7 +42,6 @@ Use these calls to generate tokens for clients and login through third parties
 - Error
   - Code 500
     Not Authorized
-
 
 ## Renew Token
 Add time to token expiration date   
@@ -161,3 +160,20 @@ Redirect to steam open id login to allow client to login
     Token not found   
   - Code 500  
     Not Authorized    
+
+## Steam User Data
+this gets parsed out of a successful steam login and attached to the token
+ 
+   ```js
+   steam:{
+     steamid: player.steamid
+     username: player.personname,
+     name: player.realname,
+     profile: player.profileurl,
+     avatar: {
+       small: player.avatar,
+       medium: player.avatarmedium,
+       large: player.avatarfull
+     }
+   }
+   ```
