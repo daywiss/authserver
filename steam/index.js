@@ -1,11 +1,10 @@
-var openid = require('openid')
+var Openid = require('openid')
 var shortid = require('shortid')
 var request = require('request-promise')
 var Promise = require('bluebird')
 var lodash = require('lodash')
-
-var steamURL = 'http://steamcommunity.com/openid' 
-var base = '/steam'
+var LRU = require('lru-cache')
+var querystring = require('querystring')
 
 function getUserInfo(steamIDURL,apiKey)
 {
@@ -30,94 +29,91 @@ function getUserInfo(steamIDURL,apiKey)
     });
 }
 
-function updateUserSteam(store,token,steamData){
-  return store.get(token).then(function(userData){
-    userData = userData || {}
-    userData.steam = steamData
-    return store.set(token,userData)
-  })
+function updateUserSteam(cache,token,steamData){
+  userData = cache.get(token)
+  userData = userData || {}
+  userData.steam = steamData
+    // console.log('setting user data',token,userData)
+  cache.set(token,userData)
+  return userData
 }
 
-function clearTimeouts(auths){
-  var now = Date.now()
-  lodash.each(auths,function(value,key){
-    if(value.expires < now){
-      delete auths[key]
-    }
-  })
-}
 
-function validateToken(req,res,next){
-  if(req.token == null) return res.status(406).send( 'request requires bearer token, see https://github.com/tkellen/js-express-bearer-token')
-  next()
-}
+module.exports = function(app,env,cache){
 
-module.exports = function(app,store,env){
   if(env.HOSTNAME == null || env.PORT == null){
     throw 'must supply HOSTNAME and PORT in .env file'
   }
   if(env.STEAM_API_KEY == null){
     throw 'must supply steam api key in STEAM_API_KEY in .env file'
   }
-  var auths = {}
 
-  function timeoutChecker(){
-    clearTimeouts(auths)
-    setTimeout(timeoutChecker,1000)
+  var cacheOptions = {
+    maxAge: 1000 * 60 * 60
   }
-  timeoutChecker()
 
+  var authCache = LRU(cacheOptions)
 
-  app.get(base,validateToken,function(req,res){
-    store.get(req.token).then(function(result){
-      if(result == null) return res.send(null)
-      return res.json(result.steam)
-    })
-  })
+  var steamURL = 'http://steamcommunity.com/openid' 
+  var host = [env.HOSTNAME,':',env.PORT].join('')
+  var verify = [host,'steam','verify'].join('/')
 
-  app.get(base+'/auth',function(req,res,next){
-    var host = [env.HOSTNAME,':',env.PORT].join('')
-    var id = shortid.generate()
-    var verify = [host,'steam','verify',id].join('/')
-    var auth = new openid.RelyingParty(verify,host,true,true,[])
-    auth.authenticate(steamURL,false,function(err,authURL){
+  var openid = new Openid.RelyingParty(verify,host,true,true,[])
+  //this will be updated with every auth/verify
+  var openidState = null
+  //add our own functions for openid statefulness so we can associate it with client token
+  openid.saveAssociation = function(provider,type,handle,secret,timeout,cb){
+    console.log('saving openid state',currentToken)
+    authCache.set(handle,{ provider:provider, secret:secret, type:type, state:openidState },timeout*1000)
+    cb()
+  }
+  openid.loadAssociation = function(handle,cb){
+    var ass = authCache.get(handle)
+    openidState = ass.state
+    console.log('loading openid state',openidState)
+    cb(null,ass)
+  }
+
+  app.get('/steam/:token',function(req,res,next){
+    if(req.query.onsuccess == null) return res.status(500).send('steam openid auth requires onsuccess callback url')
+
+    var token = cache.get(token)
+    if(token == null) return res.status(404).send('token not found')
+
+    openidState = {
+      token:token.token,
+      onsuccess:req.query.onsuccess,
+      onfailure:req.query.onfailure || req.query.onsuccess
+    }
+
+    auth.authenticate(steamURL,id,function(err,authURL){
       if(err) return res.status(500).send('Steam Authentication Error:'+err)
       if(authURL == null) return res.status(500).send('Steam Authentication Error: No auth url returned')
-      auths[id] = {
-        id:id,
-        openid:auth,
-        token:req.token,
-        expires:Date.now() + 3600000 ,
-        returnto:req.query.returnto
-      }
       res.redirect(authURL)
     })
 
   })
 
-  app.get(base+'/verify/:id',function(req,res,next){
-    var auth = auths[req.params.id]
-    // console.log('calling verify',auth)
-    if(auth == null || auth.openid == null){
-     return next('Failed to authenticate steam user')
-    }
-    var returnto = auth.returnto
-    auth.openid.verifyAssertion(req,function(err,result){
-      if(err) return next(err.message)
-      if(!result || !result.authenticated) return next('Failed to authenticate steam user')
-      getUserInfo(result.claimedIdentifier,env.STEAM_API_KEY).then(function(steamData){
-        return updateUserSteam(store,auth.token,steamData)
-      }).then(function(result){
-        // console.log(result)
-        delete auths[req.params.id]
-        if(returnto) return res.redirect(returnto)
-        res.json(result.steam)
-      }).catch(function(err){
-        delete auths[req.params.id]
-        if(returnto) return res.redirect(returnto)
-        next(err)
+  app.get('/steam/verify',function(req,res,next){
+
+    Promise.promisify(auth.openid.verifyAssertion)(req).then(function(result){
+      if(!result || !result.authenticated) throw 'Steam user did not log in successfully'
+      return getUserInfo(result.claimedIdentifier,env.STEAM_API_KEY)
+    }).then(function(steamData){
+      return updateUserSteam(cache,auth.token,steamData)
+    }).then(function(result){
+      // console.log(result)
+      return res.redirect(openidState.onsuccess)
+      // res.json(result.steam)
+    }).catch(function(err){
+      var error = querystring.stringify({
+        error:err
       })
-    })
+      return res.redirect(openidState.onfailure + '&' + error)
+      // next(err)
+    }).finally(function(){
+      authCache.del(req.params.id)
+    })                                                             
   })
 
 }

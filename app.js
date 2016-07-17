@@ -1,33 +1,26 @@
 require('dotenv').config();
 
 var express = require('express')
-var router = require('./router')
+var routes = require('./routes')
 var steam = require('./steam')
-var Store = require('./modules/memstore')
-var Middleware = require('./middleware')
+var LRU = require('lru-cache')
+var middleware = require('./middleware')
 
 var app = express()
 app.listen(process.env.PORT,function(){
   console.log('Server listening on port',process.env.PORT)
 })
 
-var store = Store()
-var wl = process.env.WHITELIST || '' 
-store.set('whitelist',wl.split(','))
+process.env.TTL = process.env.TTL || 1000*60*60*24*7
 
-app.use(Middleware.config(store,process.env))
-app.use(Middleware.whitelist(store,process.env))
-app.use(Middleware.parsetoken(store,process.env))
+var cacheOptions = {
+  maxAge: process.env.TTL 
+}
 
-// app.use('/',Middleware.parsetoken(store),router(store,process.env))
-// app.use('steam/',Middleware.parsetoken(store),steam(store,process.env))
+var cache = LRU(cacheOptions)
 
-router(app,store,process.env)
-steam(app,store,process.env)
-
-app.all('/',function(req,res){
-  res.sendStatus(404)
-})
-
+middleware(app,process.env,cache)
+routes(app,process.env,cache)
+steam(app,process.env,cache)
   
 module.exports = app

@@ -5,21 +5,28 @@
   "main": "index.js",
   "scripts": {
     "start": "node app",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tape test"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "bluebird": "^3.4.1",
     "body-parser": "^1.15.2",
+    "cache-manager": "^2.1.2",
     "cors": "^2.7.1",
     "dotenv": "^2.0.0",
     "express": "^4.14.0",
     "express-bearer-token": "^2.1.0",
     "lodash": "^4.13.1",
+    "lru-cache": "^4.0.1",
+    "node-uuid": "^1.4.7",
     "openid": "^2.0.1",
     "request": "^2.73.0",
     "request-promise": "^3.0.0",
     "shortid": "^2.2.6"
+  },
+  "devDependencies": {
+    "supertest": "^1.2.0",
+    "tape": "^4.6.0"
   }
 }

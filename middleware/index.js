@@ -1,5 +1,6 @@
-module.exports = {
-  config:require('./config'),
-  whitelist:require('./whitelist'),
-  parsetoken:require('./parsetoken')
+
+module.exports = function(app,env,cache){
+  app.use(require('./config')(app,env,cache))
+  app.use(require('./parsetoken')(app,env,cache))
+  app.use(require('./admin')(app,env,cache))
 }
