@@ -12,6 +12,11 @@ function renewToken(token,duration,defaultDuration){
   return token
 }
 
+function isAdmin(req,res,next){
+  if(req.admin == null) return res.status(401).send('all requests require admin authorization token')
+  next()
+}
+
 module.exports = function(app,env,cache){
   assert(env,'routes require env.TTL')
   assert(env.TTL,'routes require env.TTL')
@@ -19,6 +24,9 @@ module.exports = function(app,env,cache){
   var ttl = parseInt(env.TTL)
 
   var router = Router()
+
+
+  router.use(isAdmin)
   router.route('/:id')
     .all(function(req,res,next){
       var token = cache.get(req.params.id)

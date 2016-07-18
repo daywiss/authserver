@@ -20,7 +20,7 @@ var cacheOptions = {
 var cache = LRU(cacheOptions)
 
 middleware(app,process.env,cache)
-routes(app,process.env,cache)
 steam(app,process.env,cache)
+routes(app,process.env,cache)
   
 module.exports = app
