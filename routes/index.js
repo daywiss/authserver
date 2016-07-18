@@ -3,8 +3,8 @@ var assert = require('assert')
 var Router = require('express').Router
 var lodash = require('lodash')
 
-function makeToken(duration,defaultDuration){
-  return renewToken({ id:uuid.v4(), },duration,defaultDuration)
+function makeToken(id,duration,defaultDuration){
+  return renewToken({ id:id || uuid.v4()},duration,defaultDuration)
 }
 
 function renewToken(token,duration,defaultDuration){
@@ -63,7 +63,7 @@ module.exports = function(app,env,cache){
 
   //generate token
   router.post('/',function(req,res,next){
-    var token = makeToken(req.body.duration,ttl)
+    var token = makeToken(req.body.id, req.body.duration,ttl)
     cache.set(token.id,token,req.body.duration)
     res.json(token)
   })

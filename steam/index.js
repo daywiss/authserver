@@ -40,6 +40,8 @@ function updateUserSteam(cache,token,steamData){
 }
 
 //hacky state managment because steam openid does not support associations
+//the openid relying party should only be generated once on program start
+//and reused for each auth. Here we create a new one each with different endpoint.
 function statefulAuthenticate(url,verify,host,cache,state){
   var id = uuid.v4()
   verify = verify + '/' + id
@@ -57,6 +59,7 @@ function statefulVerify(cache,id,req){
   var state = cache.get(id)
   if(state == null) return Promise.reject(new Error('steam association not found'))
   return state.verify(req).then(function(result){
+    cache.del(id)
     result.state = state
     return result
   })
