@@ -63,7 +63,7 @@ module.exports = function(app,env,cache){
 
   //generate token
   router.post('/',function(req,res,next){
-    var token = makeToken(req.body.id, req.body.duration,ttl)
+    var token = makeToken(null, req.body.duration,ttl)
     cache.set(token.id,token,req.body.duration)
     res.json(token)
   })

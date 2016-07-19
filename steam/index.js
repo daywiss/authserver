@@ -7,6 +7,7 @@ var lodash = require('lodash')
 var LRU = require('lru-cache')
 var querystring = require('querystring')
 
+//pulled from https://github.com/cpancake/steam-login
 function getUserInfo(steamIDURL,apiKey)
 {
   var steamID = steamIDURL.replace('http://steamcommunity.com/openid/id/', '');
@@ -34,7 +35,6 @@ function updateUserSteam(cache,token,steamData){
   userData = cache.get(token)
   userData = userData || {}
   userData.steam = steamData
-    // console.log('setting user data',token,userData)
   cache.set(token,userData)
   return userData
 }
@@ -90,14 +90,11 @@ module.exports = function(app,env,cache){
     statefulVerify(authCache,req.params.id,req).then(function(result){
       if(!result || !result.authenticated) throw new Error('Steam user did not log in successfully')
       state = result.state
-      // console.log(state)
       return getUserInfo(result.claimedIdentifier,env.STEAM_API_KEY)
     }).then(function(steamData){
       return updateUserSteam(cache,state.token,steamData)
     }).then(function(result){
-      // console.log(result)
       return res.redirect(state.onsuccess)
-      // res.json(result.steam)
     }).catch(function(err){
       var error = querystring.stringify({
         error:err.message
@@ -105,18 +102,15 @@ module.exports = function(app,env,cache){
       console.log(error)
       if(state && state.onfailure){
         return res.redirect(state.onfailure + '?' + error)
-        // return res.redirect(openidState.onfailure)
       }else{
         return res.status(500).json(err)
       }
-      // next(err)
     }).finally(function(){
       authCache.del(req.params.id)
     })                                                             
   })
 
-  app.get('/steam/:token',function(req,res,next){
-    // if(req.query.onsuccess == null) return res.status(500).send('steam openid auth requires onsuccess callback url')
+  app.get('/steam/auth/:token',function(req,res,next){
     req.query.onsuccess = req.query.onsuccess || host
 
     var token = cache.get(req.params.token)
@@ -135,17 +129,6 @@ module.exports = function(app,env,cache){
     }).catch(function(err){
       if(err) return res.status(500).send(err.message)
     })
-    // openid.authenticate(steamURL,false,function(err,authURL){
-    //   var parsed = querystring.parse(authURL)
-    //   console.log(parsed)
-    //   // var path = authURL.split('?')[0]
-    //   // parsed['openid.return_to'] = parsed['openid.return_to'] + '/' + token.id
-    //   // console.log(path,parsed)
-    //   // var authURL = path + '?' + querystring.stringify(parsed)
-    //   // console.log(authURL)
-      
-    // })
-
   })
 
 }
